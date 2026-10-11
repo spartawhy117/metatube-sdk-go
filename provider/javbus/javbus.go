@@ -55,6 +55,7 @@ func New() *JavBus {
 			}),
 			scraper.WithCookies(baseURL, []*http.Cookie{
 				// existmag=all
+				{Name: "dv", Value: "1"},
 				{Name: "existmag", Value: "all"},
 				// age verification
 				{Name: "age", Value: "verified"},
