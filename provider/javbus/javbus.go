@@ -67,6 +67,10 @@ func New() *JavBus {
 // the number, e.g. ssis277.
 var labelNumberRe = regexp.MustCompile(`(?i)^([a-z]{2,})(\d+)$`)
 
+// regularMovieIDRe matches the numbered JavBus detail pages that can be
+// fetched directly without relying on the less stable search index.
+var regularMovieIDRe = regexp.MustCompile(`(?i)^[a-z]{2,}-\d+$`)
+
 func (bus *JavBus) NormalizeMovieID(id string) string {
 	// JavBus page URLs always contain the dashed number form.
 	return strings.ToUpper(labelNumberRe.ReplaceAllString(id, "${1}-${2}"))
@@ -184,6 +188,15 @@ func (bus *JavBus) NormalizeMovieKeyword(keyword string) string {
 }
 
 func (bus *JavBus) SearchMovie(keyword string) (results []*model.MovieSearchResult, err error) {
+	// A normalized commercial movie ID has a deterministic detail-page URL.
+	// Prefer it before the search index, which can intermittently omit valid
+	// results even though the detail page remains available.
+	if regularMovieIDRe.MatchString(keyword) {
+		if info, infoErr := bus.GetMovieInfoByID(keyword); infoErr == nil && info.IsValid() {
+			return []*model.MovieSearchResult{info.ToSearchResult()}, nil
+		}
+	}
+
 	c := bus.ClonedCollector()
 	c.Async = true /* ASYNC */
 

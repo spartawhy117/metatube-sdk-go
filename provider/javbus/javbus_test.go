@@ -53,6 +53,15 @@ func TestJavBus_Normalize(t *testing.T) {
 	} {
 		require.Equal(t, want, bus.NormalizeMovieID(id))
 	}
+	for keyword, want := range map[string]bool{
+		"SSIS-277": true,
+		"MIDV-005": true,
+		"ssis277":  false,
+		"HEYZO-1234": false,
+		"FC2-1234567": false,
+	} {
+		require.Equal(t, want, regularMovieIDRe.MatchString(keyword))
+	}
 }
 
 func TestJavBus_SearchMovie_NotFound(t *testing.T) {
